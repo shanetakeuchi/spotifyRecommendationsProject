@@ -1,6 +1,8 @@
 #import stuff
 using Pkg
 Pkg.add("Plots")
+using SimpleWeightedGraphs
+using Plots
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -86,9 +88,11 @@ end
 #     playlistTitle(optional) - a string
 # Postconditions
 #     No Additional
-function tester_Scores(dataset, songList, columnsList; yearMin=0, yearMax=0, recList=0, playlistTitle="Playlist")
+function tester_Scores(testingData, songList, columnsList; yearMin=0, yearMax=0, recList=0, playlistTitle="Playlist")
     # Reduce Data Set
-    testingData = datasetFilter(dataset, yearMin=yearMin, yearMax=yearMax)
+    if yearMin != 0 && yearMax != 0
+        datasetFilter(testingData, yearMin=yearMin, yearMax=yearMax)
+    end
     dataSize = size(testingData)[1]
 
     # Build Playlist

@@ -1,5 +1,8 @@
 using Pkg
-Pkg.add("SimpleWeightedGraphs");
+Pkg.add("LightGraphs");
+# Pkg.add("SimpleWeightedGraphs");
+# using SimpleWeightedGraphs
+using LightGraphs
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -25,17 +28,15 @@ Pkg.add("SimpleWeightedGraphs");
 #     Returns a ...
 #     If no filters are specified it returns a copy of the dataset
 function datasetFilter(dataset; yearMin=0, yearMax=0)
-    filtered_set = dataset
 
     if yearMin != 0
-        filtered_set = filtered_set[filtered_set[19].>=yearMin,:]
+        filter(x -> (getproperty(x, 19) >= yearMin),  dataset)
     end
 
-    if yearMax != 0
-        filtered_set = filtered_set[filtered_set[19].<=yearMax,:]
+     if yearMax != 0
+        filter(x -> (getproperty(x, 19) <= yearMax),  dataset)
     end
 
-    return filtered_set
 end
 
 
@@ -56,23 +57,31 @@ end
 # Postconditions
 #     Returns a list of ints in the range 1 to the size of the dataset
 function getSongIndices(dataset, songList)
+    tmpList = copy(songList)
     songIndices = []
-    for songId in songList
-        index = 0
-        for i in 1:size(dataset)[1]
-            if dataset[i, 7] == songId
-                index = i
+    for i in 1:size(dataset)[1]
+        if isempty(tmpList)
+            break
+        end
+
+        curSong = dataset[i]
+        curId = getproperty(curSong, 7)
+        for x in 1:size(tmpList)[1]
+            songId = tmpList[x]
+            if curId == songId
+                push!(songIndices, i)
+                deleteat!(tmpList, x)
                 break
             end
         end
-        if index == 0
-            # Can be used to alert user of when an Id is wrong or if a filtered dataset is excluding some songs.
-#             error("Song ID not found in dataset: $songId")
-#             println("Song ID not found in dataset: $songId")
-        else
-            push!(songIndices, index)
-        end
     end
+
+    for id in tmpList
+        # Can be used to alert user of when an Id is wrong or if a filtered dataset is excluding some songs.
+#             error("Song ID not found in dataset: $id")
+#             println("Song ID not found in dataset: $id")
+    end
+  
     return songIndices
 end
 
@@ -100,7 +109,23 @@ function generateAttDict(dataset, songIndices, columnsList)
     attDict = Dict()
     for att in columnsList
         attDict[att] = Dict()
-        attDict[att]["range"] = maximum(dataset[:,att]) - minimum(dataset[:,att])
+        attDict[att]["max"] = getproperty(dataset[1], att)
+        attDict[att]["min"] = getproperty(dataset[1], att)
+    end
+
+    for song in dataset
+        for att in columnsList
+            newVal = getproperty(song, att)
+            if newVal > attDict[att]["max"]
+                attDict[att]["max"] = newVal
+            elseif newVal < attDict[att]["min"]
+                attDict[att]["min"] = newVal
+            end
+        end
+    end
+
+    for att in columnsList
+        attDict[att]["range"] = attDict[att]["max"] - attDict[att]["min"]
     end
     return attDict
 end
@@ -187,7 +212,7 @@ function getPlaylistMultipliers_MaxRange(dataset, songIndices, attDict)
                 for j in i+1:numSongs
                     index2 = songIndices[j]
                     # Calculate the difference in attribute values
-                    push!(values, abs(dataset[index1, key] - dataset[index2, key]))
+                    push!(values, abs(getproperty(dataset[index1], key) - getproperty(dataset[index2], key)))
                 end
             end
             # Take the average of the differences and calculate its percent of the attributes range
@@ -237,7 +262,7 @@ function getPlaylistMultipliers_MinRange(dataset, songIndices, attDict)
                 for j in i+1:numSongs
                     index2 = songIndices[j]
                     # Calculate the difference in attribute values
-                    push!(values, abs(dataset[index1, key] - dataset[index2, key]))
+                    push!(values, abs(getproperty(dataset[index1], key) - getproperty(dataset[index2], key)))
                 end
             end
             # Take the average of the differences and calculate its percent of the attributes range
@@ -287,7 +312,7 @@ function getPlaylistMultipliers_Average(dataset, songIndices, attDict)
                 for j in i+1:numSongs
                     index2 = songIndices[j]
                     # Calculate the difference in attribute values
-                    push!(values, abs(dataset[index1, key] - dataset[index2, key]))
+                    push!(values, abs(getproperty(dataset[index1], key) - getproperty(dataset[index2], key)))
                 end
             end
             # Take the average of the differences and calculate its percent of the attributes range
@@ -337,7 +362,7 @@ function getPlaylistMultipliers_Median(dataset, songIndices, attDict)
                 for j in i+1:numSongs
                     index2 = songIndices[j]
                     # Calculate the difference in attribute values
-                    push!(values, abs(dataset[index1, key] - dataset[index2, key]))
+                    push!(values, abs(getproperty(dataset[index1], key) - getproperty(dataset[index2], key)))
                 end
             end
             # Take the median of the differences and calculate its percent of the attributes range
@@ -373,11 +398,12 @@ function addEdges_Complete(graph, dataset, columnsDict)
     numSongs = size(dataset)[1]
     if numSongs == 1
         return
+    end
     for i in 1:numSongs
         for j in i+1:numSongs
             weight = 0
             for att in keys(columnsDict)
-                dif = abs(dataset[i, att] - dataset[j, att])
+                dif = abs(getproperty(dataset[i], att) - getproperty(dataset[j], att))
                 attWeight = (dif / columnsDict[att]["range"]) * columnsDict[att]["multiplier"]
                 weight += attWeight
             end
@@ -413,6 +439,7 @@ function addEdges_Playlist(graph, dataset, songIndices, columnsDict)
     numSongs = size(dataset)[1]
     if numSongs == 1
         return
+    end
     for i in songIndices
         for j in 1:numSongs
             if i == j
@@ -420,7 +447,7 @@ function addEdges_Playlist(graph, dataset, songIndices, columnsDict)
             end
             weight = 0
             for att in keys(columnsDict)
-                dif = abs(dataset[i, att] - dataset[j, att])
+                dif = abs(getproperty(dataset[i], att) - getproperty(dataset[j], att))
                 attWeight = (dif / columnsDict[att]["range"]) * columnsDict[att]["multiplier"]
                 weight += attWeight
             end
@@ -535,17 +562,12 @@ end
 function getScores_TrimAverageWeight(dataset, graph, songIndices)
     playlistSize = length(songIndices)
 
-    println("Hello")
-
-    if playlistSize == 1
-        println("Hi")
-
     cutPercent = 20
     cutoff = cutPercent/2
     cutCount = Int(floor(playlistSize/cutoff))
 
-    if cutCount >= playlistSize
-        cutCount = playlistSize-1
+    # if cutCount >= playlistSize
+    #     cutCount = playlistSize-1
 
     songDict = Dict()
     for i in 1:nv(graph)

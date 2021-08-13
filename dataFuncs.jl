@@ -123,7 +123,7 @@ end
 #         artist(string)
 # Postconditions
 #     Returns a list of strings
-function getPlaylist(dataset, songNameArtistPairs)
+function XgetPlaylist(dataset, songNameArtistPairs)
     IDs = []
     for pair in songNameArtistPairs
         ID = getSongID(dataset, pair)
@@ -131,5 +131,56 @@ function getPlaylist(dataset, songNameArtistPairs)
             push!(IDs, ID)
         end
     end
+    return IDs
+end
+
+
+###################################################################################################
+# Procedure:
+#     getPlaylist
+# Parameters:
+#     dataset - the dataset of songs and their attributes
+#     songNameArtistPairs - a list of pairs including song title and artist
+# Purpose:
+#     Retreive song Ids from the dataset for multiple songs
+# Produces:
+#     Returns a list of song Ids corresponding to the matching songs and artists in the dataset
+# Preconditions
+#     dataset - a data frame with columns of song attributes and each row represenst an individual song
+#     songNameArtistPairs - a list of pairs
+#         song title(string)
+#         artist(string)
+# Postconditions
+#     Returns a list of strings
+function getPlaylist(dataset, songNameArtistPairs)
+    IDs = []
+    lowerPairs = []
+    for pair in songNameArtistPairs
+        push!(lowerPairs, (lowercase(pair[1]), lowercase(pair[2])))
+    end
+
+    for i in 1:size(dataset)[1]
+        if isempty(songNameArtistPairs)
+            break
+        end
+
+        song = dataset[i]
+        title = lowercase(getproperty(song, 13))
+        artist = lowercase(getproperty(song, 2))
+        for x in 1:size(lowerPairs)[1]
+            pair = lowerPairs[x]
+            if occursin(pair[1], title) && occursin(pair[2], artist)
+                push!(IDs, song[7])
+                deleteat!(lowerPairs, x)
+                deleteat!(songNameArtistPairs, x)
+                break
+            end
+        end
+    end
+
+    for pair in songNameArtistPairs
+        println("Could not find ", pair[1], " by ", pair[2])
+    end
+
     return IDs
 end
