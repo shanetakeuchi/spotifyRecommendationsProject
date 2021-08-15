@@ -1,6 +1,5 @@
 using CSV
 using DataFrames
-using BenchmarkTools
 
 include("./printFuncs.jl")
 include("./dataFuncs.jl")
@@ -19,16 +18,14 @@ example = [
 
 # Add songs and artist here
 playlist = [
-    ("Magic In The Hamptons (feat. Lil Yachty)", "Social House"),
-    ("Sunday Best", "Surfaces"),
-    ("Electric Love", "BØRNS")
+
 ]
 
 # The number of recommendations that you want
 count = 20
 
 # The year range that songs are searched for
-# Also affects playlist generation
+# Also affects playlist generation, playlist songs outside of the range will not be added
 yearMin = 2010
 yearMax = 2020
 

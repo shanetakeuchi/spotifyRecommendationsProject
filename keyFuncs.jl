@@ -1,9 +1,4 @@
-using Pkg
-Pkg.add("LightGraphs");
-# Pkg.add("SimpleWeightedGraphs");
-# using SimpleWeightedGraphs
 using LightGraphs
-
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # KEY FUNCTIONS
@@ -30,11 +25,11 @@ using LightGraphs
 function datasetFilter(dataset; yearMin=0, yearMax=0)
 
     if yearMin != 0
-        filter(x -> (getproperty(x, 19) >= yearMin),  dataset)
+        filter!(song -> (song[19] >= yearMin),  dataset)
     end
 
      if yearMax != 0
-        filter(x -> (getproperty(x, 19) <= yearMax),  dataset)
+        filter!(song -> (song[19] <= yearMax),  dataset)
     end
 
 end
@@ -64,8 +59,7 @@ function getSongIndices(dataset, songList)
             break
         end
 
-        curSong = dataset[i]
-        curId = getproperty(curSong, 7)
+        curId = dataset[i,7]
         for x in 1:size(tmpList)[1]
             songId = tmpList[x]
             if curId == songId
@@ -109,23 +103,7 @@ function generateAttDict(dataset, songIndices, columnsList)
     attDict = Dict()
     for att in columnsList
         attDict[att] = Dict()
-        attDict[att]["max"] = getproperty(dataset[1], att)
-        attDict[att]["min"] = getproperty(dataset[1], att)
-    end
-
-    for song in dataset
-        for att in columnsList
-            newVal = getproperty(song, att)
-            if newVal > attDict[att]["max"]
-                attDict[att]["max"] = newVal
-            elseif newVal < attDict[att]["min"]
-                attDict[att]["min"] = newVal
-            end
-        end
-    end
-
-    for att in columnsList
-        attDict[att]["range"] = attDict[att]["max"] - attDict[att]["min"]
+        attDict[att]["range"] = maximum(dataset[:,att]) - minimum(dataset[:,att])
     end
     return attDict
 end
@@ -212,7 +190,7 @@ function getPlaylistMultipliers_MaxRange(dataset, songIndices, attDict)
                 for j in i+1:numSongs
                     index2 = songIndices[j]
                     # Calculate the difference in attribute values
-                    push!(values, abs(getproperty(dataset[index1], key) - getproperty(dataset[index2], key)))
+                    push!(values, abs(dataset[index1, key] - dataset[index2, key]))
                 end
             end
             # Take the average of the differences and calculate its percent of the attributes range
@@ -262,7 +240,7 @@ function getPlaylistMultipliers_MinRange(dataset, songIndices, attDict)
                 for j in i+1:numSongs
                     index2 = songIndices[j]
                     # Calculate the difference in attribute values
-                    push!(values, abs(getproperty(dataset[index1], key) - getproperty(dataset[index2], key)))
+                    push!(values, abs(dataset[index1, key] - dataset[index2, key]))
                 end
             end
             # Take the average of the differences and calculate its percent of the attributes range
@@ -312,7 +290,7 @@ function getPlaylistMultipliers_Average(dataset, songIndices, attDict)
                 for j in i+1:numSongs
                     index2 = songIndices[j]
                     # Calculate the difference in attribute values
-                    push!(values, abs(getproperty(dataset[index1], key) - getproperty(dataset[index2], key)))
+                    push!(values, abs(dataset[index1, key] - dataset[index2, key]))
                 end
             end
             # Take the average of the differences and calculate its percent of the attributes range
@@ -362,7 +340,7 @@ function getPlaylistMultipliers_Median(dataset, songIndices, attDict)
                 for j in i+1:numSongs
                     index2 = songIndices[j]
                     # Calculate the difference in attribute values
-                    push!(values, abs(getproperty(dataset[index1], key) - getproperty(dataset[index2], key)))
+                    push!(values, abs(dataset[index1, key] - dataset[index2, key]))
                 end
             end
             # Take the median of the differences and calculate its percent of the attributes range
@@ -403,7 +381,7 @@ function addEdges_Complete(graph, dataset, columnsDict)
         for j in i+1:numSongs
             weight = 0
             for att in keys(columnsDict)
-                dif = abs(getproperty(dataset[i], att) - getproperty(dataset[j], att))
+                dif = abs(dataset[i, att] - dataset[j, att])
                 attWeight = (dif / columnsDict[att]["range"]) * columnsDict[att]["multiplier"]
                 weight += attWeight
             end
@@ -447,7 +425,7 @@ function addEdges_Playlist(graph, dataset, songIndices, columnsDict)
             end
             weight = 0
             for att in keys(columnsDict)
-                dif = abs(getproperty(dataset[i], att) - getproperty(dataset[j], att))
+                dif = abs(dataset[i, att] - dataset[j, att])
                 attWeight = (dif / columnsDict[att]["range"]) * columnsDict[att]["multiplier"]
                 weight += attWeight
             end
@@ -562,12 +540,13 @@ end
 function getScores_TrimAverageWeight(dataset, graph, songIndices)
     playlistSize = length(songIndices)
 
-    cutPercent = 20
-    cutoff = cutPercent/2
-    cutCount = Int(floor(playlistSize/cutoff))
-
-    # if cutCount >= playlistSize
-    #     cutCount = playlistSize-1
+    if playlistSize >= 10
+        cutPercent = 20
+        cutoff = cutPercent/2
+        cutCount = Int(floor(playlistSize/cutoff))
+    else
+        cutCount = 0
+    end
 
     songDict = Dict()
     for i in 1:nv(graph)
@@ -582,7 +561,11 @@ function getScores_TrimAverageWeight(dataset, graph, songIndices)
 
         weightList = weightList[(1+cutCount):(length(weightList)-cutCount)]
 
-        songDict[i] = sum(weightList)
+        if isempty(weightList)
+            songDict[i] = 0
+        else
+            songDict[i] = sum(weightList)
+        end
     end
 
     sortedScores = sort(collect(songDict), by=x->x[2])

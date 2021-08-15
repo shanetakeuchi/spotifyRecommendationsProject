@@ -1,9 +1,6 @@
-#import stuff
-using Pkg
-Pkg.add("Plots")
 using SimpleWeightedGraphs
 using Plots
-
+using Statistics
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # TESTING FUNCTIONS
@@ -481,4 +478,35 @@ function getPlaylistRecommendations(dataset, songList, columnsList; yearMin=0, y
     println("#####################    Recommendations    #####################")
     printTopRecommendations(testingData, sortedWeights, count)
 
+end
+
+
+###################################################################################################
+# Procedure:
+#     playlistTest
+# Parameters:
+#     ...
+# Purpose:
+#     ...
+# Produces:
+#     ...
+# Preconditions
+#     ...
+# Postconditions
+#     ...
+function playlistTest(allData, playlist, playlistRecs, columnsList, playlistTitle, yearMin, yearMax)
+    println("$(playlistTitle) Testing")
+
+    println("Building \"$(playlistTitle)\" Playlists")
+    playlistIds = getPlaylist(allData, playlist)
+    playlistRecIds = getPlaylist(allData, playlistRecs)
+
+    println("Running Score Methods Comparison")
+    tester_Scores(allData, playlistIds, columnsList, yearMin=yearMin, yearMax=yearMax, recList=playlistRecIds, playlistTitle=playlistTitle)
+
+    println("Running Multiplier Methods Comparison")
+    tester_Multipliers(allData, playlistIds, columnsList, yearMin=yearMin, yearMax=yearMax, print=false, recList=playlistRecIds, playlistTitle=playlistTitle)
+
+    println("Getting Recommendations for $(playlistTitle)")
+    getPlaylistRecommendations(allData, playlistIds, columnsList, yearMin=yearMin, yearMax=yearMax, count=10, print=false)
 end

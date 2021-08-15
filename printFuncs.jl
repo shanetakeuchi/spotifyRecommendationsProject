@@ -21,14 +21,14 @@
 #     No Additional
 function printSongIndices(dataset, songIndices; columnsList=0)
     for songIndex in songIndices
-        song = dataset[songIndex] 
-        println("Song:   $(getproperty(song, 13))")
-        println("Artist: $(getproperty(song, 2))")
+        song = dataset[songIndex,:] 
+        println("Song:   $(song[13])")
+        println("Artist: $(song[2])")
         println("Index:  $songIndex")
 
+        # names = propertynames(dataset)
         for col in columnsList
             println("   $(names(dataset)[col]): $(song[col])")
-            println("   $(names(dataset)[col]): $(getproperty(song, col))")
         end
         println("-----------------------------------------------------------------")
     end
@@ -57,10 +57,10 @@ end
 function printTopRecommendations(dataset, sortedScores, count)
     for i in 1:count
         index = sortedScores[i][1]
-        println("Artist:   $(getproperty(dataset[index], 2))")
-        println("Song:     $(getproperty(dataset[index], 13))")
-        println("Year:     $(getproperty(dataset[index], 19))")
-        println("Id:       $(getproperty(dataset[index], 7))")
+        println("Artist:   $(dataset[index, 2])")
+        println("Song:     $(dataset[index, 13])")
+        println("Year:     $(dataset[index, 19])")
+        println("Id:       $(dataset[index, 7])")
         println("-----------------------------------------------------------------")
     end
 end
@@ -83,13 +83,13 @@ end
 #     No Additional
 function printSong(dataset, songName)
     for i in 1:size(dataset)[1]
-        song = dataset[i]
+        song = dataset[i,:]
         if occursin(lowercase(songName), lowercase(getproperty(song, 13)))
             println("############################################")
-            println("Artist:   $(getproperty(song, 2))")
-            println("Song:     $(getproperty(song, 13))")
-            println("Year:     $(getproperty(song, 19))")
-            println("Id:       $(getproperty(song, 7))")
+            println("Artist:   $(dataset[index, 2])")
+            println("Song:     $(dataset[index, 13])")
+            println("Year:     $(dataset[index, 19])")
+            println("Id:       $(dataset[index, 7])")
             println("Index:    $i")
             println("############################################")
         end
@@ -118,8 +118,8 @@ end
 function printRecommendationPositions(dataset, result)
     println("##################### Results       #####################")
     for set in result
-        println("Artist:   $(getproperty(dataset[set[1]], 2))")
-        println("Song:     $(getproperty(dataset[set[1]], 13))")
+        println("Artist:   $(dataset[set[1], 2]))")
+        println("Song:     $(dataset[set[1], 13]))")
         println("Index:    $(set[1])")
         println("Position: $(set[2])")
         println("Percent:  $(set[3])%")
