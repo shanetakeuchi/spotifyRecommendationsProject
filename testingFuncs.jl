@@ -504,8 +504,14 @@ function playlistTest(allData, playlist, playlistRecs, columnsList, playlistTitl
     println("Running Score Methods Comparison")
     tester_Scores(allData, playlistIds, columnsList, yearMin=yearMin, yearMax=yearMax, recList=playlistRecIds, playlistTitle=playlistTitle)
 
+    println("Press Enter to run next test")
+    readline()
+
     println("Running Multiplier Methods Comparison")
     tester_Multipliers(allData, playlistIds, columnsList, yearMin=yearMin, yearMax=yearMax, print=false, recList=playlistRecIds, playlistTitle=playlistTitle)
+
+    println("Press Enter to run next test")
+    readline()
 
     println("Getting Recommendations for $(playlistTitle)")
     getPlaylistRecommendations(allData, playlistIds, columnsList, yearMin=yearMin, yearMax=yearMax, count=10, print=false)

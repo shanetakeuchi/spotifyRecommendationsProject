@@ -19,19 +19,19 @@ columnsList = [1, 3, 5, 8, 10, 11, 16, 17, 18]
 
 println("Press Enter to run Classical Essentials test")
 readline()
-allData = CSV.read("data.csv");
+allData = DataFrame(CSV.File("data.csv"))
 columnsList = [1, 3, 5, 8, 10, 11, 16, 17, 18]
 @time playlistTest(allData, classicalEssentials, classicalEssentialsRec, columnsList, "Classical Essentials", 1998, 2003)
 
 println("Press Enter to run Teen Beats test")
 readline()
-allData = CSV.read("data.csv");
+allData = DataFrame(CSV.File("data.csv"))
 columnsList = [1, 3, 5, 8, 10, 11, 16, 17, 18]
 @time playlistTest(allData, teenBeats, teenBeatsRec, columnsList, "Teen Beats", 2015, 2020)
 
 println("Press Enter to run Mood Booster test")
 readline()
-allData = CSV.read("data.csv");
+allData = DataFrame(CSV.File("data.csv"))
 columnsList = [1, 3, 5, 8, 10, 11, 16, 17, 18]
 @time playlistTest(allData, moodBooster, moodBoosterRec, columnsList, "Mood Booster", 2015, 2020)
 
